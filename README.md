@@ -1,4 +1,4 @@
-# 🃏 Truco em C - Protótipo do Simulador
+# Truco em C - Protótipo do Simulador
 
 Este é um projeto em desenvolvimento de um simulador do clássico jogo de cartas **Truco** feito em linguagem C. O objetivo atual é estruturar a lógica interna do jogo, incluindo a distribuição de cartas, definição de equipes, embaralhamento e a identificação do "Vira" e das "Manilhas".
 
@@ -10,7 +10,7 @@ Este é um projeto em desenvolvimento de um simulador do clássico jogo de carta
 
 ---
 
-## 🛠️ Funcionalidades Atuais (Protótipo)
+## Funcionalidades Atuais (Protótipo)
 
 O estado atual do código já gerencia com sucesso as seguintes etapas mecânicas:
 * **Baralho de Truco:** Criação de um deck "limpo" com 40 cartas (removendo 8, 9, 10 e Curingas).
