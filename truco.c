@@ -17,16 +17,11 @@ struct team {
 };
 
 void shuffle(int *p);
-
 int translate_suit(int card_id);
-
 int translate_face(int card_id);
-
 void sort(int matrix, char *sorted_faces[]);
-
-int is_valid_card(char *card, struct player *player, char *faces[], char *suits[]);
-
-int round_winner(char *round_cards[], struct team *score_team);
+int is_valid_card(char *card, struct player *player, char *faces[], char *suits[], int round_power[]);
+void round_winner(int round_power[], struct team *points_A, struct team *points_B);
 
 int main(){
     int cards[40];
@@ -34,15 +29,21 @@ int main(){
     
     char *faces[] = {"4", "5", "6", "7", "Q", "J", "K", "A", "2", "3"};
     char *suits[] = {"o", "e", "c", "p"};
-    char *round_cards[4];
+    
+    char round_cards[4][4]; 
+    int round_power[4];
 
     struct team team_0 = {0, 0, 0};
     struct team team_1 = {1, 0, 0};
 
     int starter = 0;
+    srand(time(NULL)); 
 
     while(team_0.total_score < max_points && team_1.total_score < max_points){
         
+        team_0.points = 0;
+        team_1.points = 0;
+
         char *sorted_faces[10];
         for(int i = 0; i < 10; i++){
             sorted_faces[i] = faces[i];
@@ -55,7 +56,6 @@ int main(){
             cards[i] = i; 
         }
 
-        srand(time(NULL)); 
         shuffle(cards);
 
         int top_deck = 0; 
@@ -76,58 +76,59 @@ int main(){
         matrix = cards[top_deck];
         sort(matrix, sorted_faces);
 
-        printf(
-            "O Vira e: %s%s\n", 
-            faces[translate_face(matrix)], 
-            suits[translate_suit(matrix)]
-        );
-
-        printf("A Manilha (mais forte) e: %s\n\n", sorted_faces[9]);
+        printf("\n==================================\n");
+        printf("O Vira e: %s%s\n", faces[translate_face(matrix)], suits[translate_suit(matrix)]);
+        printf("A Manilha (mais forte) e: %s\n", sorted_faces[9]);
+        printf("==================================\n\n");
 
         for(int i = 0; i < 4; i++){
             printf("Player %d (Time %c): Cards: ", i+1, (players[i].team_id == 0) ? 'A' : 'B');
             players[i].id_player = i+1;
             
-            printf(
-                "%s%s, ", 
-                faces[translate_face(players[i].cards[0])], 
-                suits[translate_suit(players[i].cards[0])]
-            );
-            printf(
-                "%s%s, ", 
-                faces[translate_face(players[i].cards[1])], 
-                suits[translate_suit(players[i].cards[1])]
-            );
-            printf(
-                "%s%s\n", 
-                faces[translate_face(players[i].cards[2])], 
-                suits[translate_suit(players[i].cards[2])]
-            );
+            printf("%s%s, ", faces[translate_face(players[i].cards[0])], suits[translate_suit(players[i].cards[0])]);
+            printf("%s%s, ", faces[translate_face(players[i].cards[1])], suits[translate_suit(players[i].cards[1])]);
+            printf("%s%s\n", faces[translate_face(players[i].cards[2])], suits[translate_suit(players[i].cards[2])]);
         }  
         
-        starter = (starter == 3) ? 0 : starter++;
+        if (starter == 3) {
+            starter = 0;
+        } else{
+            starter++;
+        }
 
-        //rodada
-        while(team_0.points != 2 || team_1.points != 2){
-            //Validar se a carta escolhida no scanf é válida, ou seja, se o jogador tem a carta e se ela não foi jogada ainda.
+        while(team_0.points < 2 && team_1.points < 2){
 
-            for(int i = 0;  i < 3 ; i++){
+            for(int i = 0; i < 4; i++) round_power[i] = -1;
+
+            for(int i = 0;  i < 4 ; i++){
                 int current_player = (starter+i) % 4;
                 int valid = 0;
-                
+ 
                 while(valid == 0){
                     printf("Carta Jogador %d válida: ", players[current_player].id_player);
-                    scanf("%s", round_cards[current_player] );
-                    valid = is_valid_card(round_cards[current_player], &players[current_player], faces, suits);
+                    scanf("%3s", round_cards[current_player]); // %3s evita estouro de buffer
+                    valid = is_valid_card(round_cards[current_player], &players[current_player], faces, suits, round_power);
+                    if(!valid) {
+                        printf("Carta inválida ou já jogada! Tente novamente.\n");
+                    }
                 }
-                printf("Carta valida.");
-                
             }
+
+            round_winner(round_power, &team_0, &team_1);
+            printf("Placar Parcial da Mão: Time A: %d, Time B: %d\n", team_0.points, team_1.points);
         }
+
+        if(team_0.points >= 2) {
+            team_0.total_score++;
+            printf("\n>>> Time A ganhou a mão! <<<\n");
+        } else {
+            team_1.total_score++;
+            printf("\n>>> Time B ganhou a mão! <<<\n");
+        }
+        printf("PLACAR GERAL DO CAMPEONATO: Time A: %d | Time B: %d\n", team_0.total_score, team_1.total_score);
     }
 
-
-
+    printf("\nFIM DE JOGO! O campeão foi o %s!\n", (team_0.total_score >= max_points) ? "Time A" : "Time B");
     return 0;
 }
 
@@ -142,35 +143,24 @@ void shuffle(int *p){
 
 void sort(int matrix, char *sorted_faces[]){
     int vira_index = translate_face(matrix);
-    
     int manilha_index = (vira_index + 1) % 10;
-    
     char *manilha_face = sorted_faces[manilha_index];
     
     for(int i = manilha_index; i < 9; i++){
         sorted_faces[i] = sorted_faces[i+1];
     }
-    
     sorted_faces[9] = manilha_face;
 }
 
-int translate_face(int card_id){
-    return card_id / 4;
-}
+int translate_face(int card_id) { return card_id / 4; }
+int translate_suit(int card_id) { return card_id % 4; }
 
-int translate_suit(int card_id){
-    return card_id % 4;
-}
-
-
-//função que valida carta jogada, se ela existe ou não na mão do jogador e se ela já foi jogada ou não
-int is_valid_card(char *card, struct player *player, char *faces[], char *suits[]){
-
+int is_valid_card(char *card, struct player *player, char *faces[], char *suits[], int round_power[]){
     char face_recebida = card[0];
     char suit_recebida = card[1];
 
-    //verifica se o player tem carta e se carta existe:
     for(int i = 0; i < 3; i++){
+        if(player->cards[i] == -1) continue;
 
         int idx_face = translate_face(player->cards[i]);
         int idx_suit = translate_suit(player->cards[i]);
@@ -179,13 +169,33 @@ int is_valid_card(char *card, struct player *player, char *faces[], char *suits[
         char naipe_player = suits[idx_suit][0]; 
  
         if(face_recebida == face_player && suit_recebida == naipe_player){
+            round_power[(player->id_player - 1)] = player->cards[i];
+            
+            player->cards[i] = -1; 
             return 1;
         }
     }
     return 0;
 }
-
-//função maior carta do round, comparar as cartas jogadas e retornar o time vencedor da rodada
-int round_winner(char *round_cards[], struct team *score_team){
     
+void round_winner(int round_power[], struct team *points_A, struct team *points_B){  
+    int p = -1;
+    int id_player = -1;
+
+    for(int i = 0; i < 4; i++){
+        if(round_power[i] > p){
+            p = round_power[i];
+            id_player = i;
+        }
+    }
+
+    printf("\n----------------------------------\n");
+    if(id_player % 2 == 0){
+        printf("Time A venceu a rodada.\n");
+        points_A->points++;
+    } else {
+        printf("Time B venceu a rodada.\n");
+        points_B->points++;
+    }
+    printf("----------------------------------\n");
 }
