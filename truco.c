@@ -129,7 +129,6 @@ int main(){
                     }
                 }
             }
-
             round_winner(round_power, &team_0, &team_1);
             printf("Placar Parcial da Mão: Time A: %d, Time B: %d\n", team_0.points, team_1.points);
 
