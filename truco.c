@@ -77,24 +77,39 @@ int main(){
         sort(matrix, sorted_faces);
 
         printf("\n==================================\n");
-        printf("O Vira e: %s%s\n", faces[translate_face(matrix)], suits[translate_suit(matrix)]);
+        printf(
+            "O Vira e: %s%s\n", 
+            faces[translate_face(matrix)], 
+            suits[translate_suit(matrix)]
+        );
         printf("A Manilha (mais forte) e: %s\n", sorted_faces[9]);
         printf("==================================\n\n");
 
         for(int i = 0; i < 4; i++){
-            printf("Player %d (Time %c): Cards: ", i+1, (players[i].team_id == 0) ? 'A' : 'B');
+            printf(
+                "Player %d (Time %c): Cards: ", i+1, 
+                (players[i].team_id == 0) ? 'A' : 'B'
+            );
             players[i].id_player = i+1;
             
-            printf("%s%s, ", faces[translate_face(players[i].cards[0])], suits[translate_suit(players[i].cards[0])]);
-            printf("%s%s, ", faces[translate_face(players[i].cards[1])], suits[translate_suit(players[i].cards[1])]);
-            printf("%s%s\n", faces[translate_face(players[i].cards[2])], suits[translate_suit(players[i].cards[2])]);
+            printf(
+                "%s%s, ", 
+                faces[translate_face(players[i].cards[0])], 
+                suits[translate_suit(players[i].cards[0])]
+            );
+            printf(
+                "%s%s, ", 
+                faces[translate_face(players[i].cards[1])], 
+                suits[translate_suit(players[i].cards[1])]
+            );
+            printf(
+                "%s%s\n", 
+                faces[translate_face(players[i].cards[2])], 
+                suits[translate_suit(players[i].cards[2])]
+            );
         }  
         
-        if (starter == 3) {
-            starter = 0;
-        } else{
-            starter++;
-        }
+        
 
         while(team_0.points < 2 && team_1.points < 2){
 
@@ -106,8 +121,9 @@ int main(){
  
                 while(valid == 0){
                     printf("Carta Jogador %d válida: ", players[current_player].id_player);
-                    scanf("%3s", round_cards[current_player]); // %3s evita estouro de buffer
-                    valid = is_valid_card(round_cards[current_player], &players[current_player], faces, suits, round_power);
+                    scanf("%3s", round_cards[current_player]); 
+                    valid = is_valid_card(round_cards[current_player], 
+                        &players[current_player], faces, suits, round_power);
                     if(!valid) {
                         printf("Carta inválida ou já jogada! Tente novamente.\n");
                     }
@@ -116,6 +132,13 @@ int main(){
 
             round_winner(round_power, &team_0, &team_1);
             printf("Placar Parcial da Mão: Time A: %d, Time B: %d\n", team_0.points, team_1.points);
+
+            if (starter == 3) {
+                starter = 0;
+            } else{
+                starter++;
+            }
+            
         }
 
         if(team_0.points >= 2) {
@@ -125,10 +148,14 @@ int main(){
             team_1.total_score++;
             printf("\n>>> Time B ganhou a mão! <<<\n");
         }
-        printf("PLACAR GERAL DO CAMPEONATO: Time A: %d | Time B: %d\n", team_0.total_score, team_1.total_score);
+        printf("PLACAR GERAL: Time A: %d | Time B: %d\n", 
+            team_0.total_score, team_1.total_score
+        );
     }
 
-    printf("\nFIM DE JOGO! O campeão foi o %s!\n", (team_0.total_score >= max_points) ? "Time A" : "Time B");
+    printf("\nFIM DE JOGO! os ganhadores veceram os patos %s!\n", 
+        (team_0.total_score >= max_points) ? "Time A" : "Time B"
+    );
     return 0;
 }
 
@@ -199,3 +226,10 @@ void round_winner(int round_power[], struct team *points_A, struct team *points_
     }
     printf("----------------------------------\n");
 }
+
+// rodar o starter pelo winner 
+// total_score até 12, então reiniciar partida, o primeiro a chegar em 12 ganha o campeonato
+// opção de truco, truco vale 3, retruco vale 6, vale 9, vale 12
+// opção de aceitar ou recusar o truco, se recusar perde a rodada, se aceitar o valor do truco aumenta e o jogo continua
+// truco na mão de 11 não é permitido, o jogador só pode pedir truco se tiver 10 pontos ou menos, quem pedir truco, perde o campeonato
+// ultima alteração do programa: exibir completamente o valor das cartas do jogo, e não char, o naipe e a face, ex: 4 de ouros, 5 de espadas, etc.
